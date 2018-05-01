@@ -2301,6 +2301,36 @@ class Visitor(ast.NodeVisitor):
     @node_visitor
     def visit_ExceptHandler(self, node):
         # expr? type, identifier? name, stmt* body):
+        if isinstance(node.type, ast.Call):
+            exception = self.full_classref('BaseException', default_prefix='org.python.exceptions')
+            self.context.add_opcodes(
+                CATCH(exception),
+            )
+            self.visit(node.type)
+            self.context.add_opcodes(
+                JavaOpcodes.INVOKESTATIC(
+                    'org/Python',
+                    'isinstance',
+                    args=[
+                        'Lorg/python/Object;',
+                        'Lorg/python/Object;',
+                    ],
+                    returns='Lorg/python/types/Bool;'
+                )
+            )
+            self.context.add_opcodes(
+                IF([python.Object.as_boolean()], JavaOpcodes.IFEQ),
+            )
+            for child in node.body:
+                self.visit(child)
+            self.context.add_opcodes(
+                END_IF(),
+            )
+
+        else:
+            self._visitCoreException(node)
+
+    def _visitCoreException(self, node):
         if isinstance(node.type, ast.Tuple):
             exception = [
                 self.full_classref(exc.id, default_prefix='org.python.exceptions')

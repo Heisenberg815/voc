@@ -883,3 +883,21 @@ class TryExceptElseFinallyTests(TranspileTestCase):
                 print("Do final cleanup")
             print('Done.')
             """, exits_early=True)
+
+    def test_except_an_expr(self):
+        self.assertCodeExecution("""
+            f = lambda: ValueError
+            try:
+               raise ValueError("YO")
+            except f():
+                print('OLE')
+        """)
+
+        # Not working yet
+        self.assertCodeExecution("""
+            f = lambda: ValueError
+            try:
+               raise ValueError
+            except f():
+                print('OLE')
+        """)
