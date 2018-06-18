@@ -890,14 +890,49 @@ class TryExceptElseFinallyTests(TranspileTestCase):
             try:
                raise ValueError("YO")
             except f():
-                print('OLE')
+               print('Got a dynamic exception')
+            else:
+               print("Should do not print this")
+            finally:
+               print("Do final cleanup")
+            print('Done.')
         """)
 
-        # Not working yet
         self.assertCodeExecution("""
             f = lambda: ValueError
             try:
-               raise ValueError
+                raise ValueError
+            except f() as e:
+                print('Got a dynamic exception', e)
+            else:
+                print("Should do not print this")
+            finally:
+                print("Do final cleanup")
+            print('Done.')
+        """)
+
+        self.assertCodeExecution("""
+            f = lambda: ValueError
+            try:
+                raise TypeError("YO")
             except f():
-                print('OLE')
+                print("Should not print this")
+            else:
+                print("Do else handling")
+            finally:
+                print("Do final cleanup")
+            print('Done.')
+        """, exits_early=True)
+
+        self.assertCodeExecution("""
+            x = ValueError
+            try:
+                raise ValueError
+            except x as e:
+                print('Got a dynamic exception', e)
+            else:
+                print("Should do not print this")
+            finally:
+                print("Do final cleanup")
+            print('Done.')
         """)

@@ -2300,11 +2300,81 @@ class Visitor(ast.NodeVisitor):
 
     @node_visitor
     def visit_ExceptHandler(self, node):
+        builtin_exceptions = [
+            "ArithmeticError",
+            "AssertionError",
+            "AttributeError",
+            "BaseException",
+            "BlockingIOError",
+            "BrokenPipeError",
+            "BufferError",
+            "BytesWarning",
+            "ChildProcessError",
+            "ConnectionAbortedError",
+            "ConnectionError",
+            "ConnectionRefusedError",
+            "ConnectionResetError",
+            "DeprecationWarning",
+            "EOFError",
+            "Exception",
+            "FileExistsError",
+            "FileNotFoundError",
+            "FloatingPointError",
+            "FutureWarning",
+            "GeneratorExit",
+            "ImportError",
+            "ImportWarning",
+            "IndentationError",
+            "IndexError",
+            "InterruptedError",
+            "IsADirectoryError",
+            "KeyError",
+            "KeyboardInterrupt",
+            "LookupError",
+            "MemoryError",
+            "NameError",
+            "NotADirectoryError",
+            "NotImplementedError",
+            "OSError",
+            "OverflowError",
+            "PendingDeprecationWarning",
+            "PermissionError",
+            "ProcessLookupError",
+            "ReferenceError",
+            "ResourceWarning",
+            "RuntimeError",
+            "RuntimeWarning",
+            "StandardError",
+            "StopIteration",
+            "SyntaxError",
+            "SyntaxWarning",
+            "SystemError",
+            "SystemExit",
+            "TabError",
+            "TimeoutError",
+            "TypeError",
+            "UnboundLocalError",
+            "UnicodeDecodeError",
+            "UnicodeEncodeError",
+            "UnicodeError",
+            "UnicodeTranslateError",
+            "UnicodeWarning",
+            "UserWarning",
+            "ValueError",
+            "Warning",
+            "ZeroDivisionError",
+        ]
+        if node.type in builtin_exceptions:
+            self._visitCoreException(node)
+
         # expr? type, identifier? name, stmt* body):
-        if isinstance(node.type, ast.Call):
+        else:
             exception = self.full_classref('BaseException', default_prefix='org.python.exceptions')
             self.context.add_opcodes(
                 CATCH(exception),
+            )
+            self.context.add_opcodes(
+                JavaOpcodes.DUP()
             )
             self.visit(node.type)
             self.context.add_opcodes(
@@ -2321,14 +2391,27 @@ class Visitor(ast.NodeVisitor):
             self.context.add_opcodes(
                 IF([python.Object.as_boolean()], JavaOpcodes.IFEQ),
             )
+            if node.name:
+                # The exception has been named. Store it as that name.
+                self.context.store_name(node.name)
+            else:
+                self.context.add_opcodes(
+                    JavaOpcodes.POP()
+                )
+
             for child in node.body:
                 self.visit(child)
+            self.context.add_opcodes(
+                ELSE()
+            )
+            self.context.add_opcodes(
+                JavaOpcodes.CHECKCAST('java/lang/Throwable'),
+                JavaOpcodes.ATHROW(),
+            )
             self.context.add_opcodes(
                 END_IF(),
             )
 
-        else:
-            self._visitCoreException(node)
 
     def _visitCoreException(self, node):
         if isinstance(node.type, ast.Tuple):
