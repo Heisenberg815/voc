@@ -2364,7 +2364,10 @@ class Visitor(ast.NodeVisitor):
             "Warning",
             "ZeroDivisionError",
         ]
-        if node.type in builtin_exceptions:
+        if node.type is None or (
+                isinstance(node.type, ast.Name) and
+                node.type.id in builtin_exceptions
+        ):
             self._visitCoreException(node)
 
         # expr? type, identifier? name, stmt* body):
