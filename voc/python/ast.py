@@ -2474,8 +2474,7 @@ class Visitor(ast.NodeVisitor):
     def visit_Index(self, node):
         self.visit(node.value)
 
-    @node_visitor
-    def visit_ExceptHandler(self, node):
+    def _should_visit_core_exception(self, node):
         builtin_exceptions = [
             "ArithmeticError",
             "AssertionError",
@@ -2540,13 +2539,19 @@ class Visitor(ast.NodeVisitor):
             "Warning",
             "ZeroDivisionError",
         ]
-        if node.type is None or (
+        return node.type is None or (
                 isinstance(node.type, ast.Name) and
-                node.type.id in builtin_exceptions
-        ):
-            self._visitCoreException(node)
+                (node.type.id in builtin_exceptions or
+                node.type.id in self.symbol_namespace
+                )
+        )
 
+    @node_visitor
+    # [FIXME] - make it work for Tuples
+    def visit_ExceptHandler(self, node):
         # expr? type, identifier? name, stmt* body):
+        if self._should_visit_core_exception(node):
+            self._visitCoreException(node)
         else:
             exception = self.full_classref('BaseException', default_prefix='org.python.exceptions')
             self.context.add_opcodes(
