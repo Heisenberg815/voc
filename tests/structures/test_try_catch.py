@@ -965,3 +965,25 @@ class TryExceptElseFinallyTests(TranspileTestCase):
                 print("Do final cleanup")
             print('Done.')
         """)
+
+    @expectedFailure
+    def test_except_tuple_custom_exception(self):
+        self.assertCodeExecution("""
+            class MyException(Exception):
+                pass
+            try:
+                raise MyException
+            except (MyException,):
+                print("Got a custom exception")
+            print('Done.')
+         """)
+
+        self.assertCodeExecution("""
+            class MyException(Exception):
+                pass
+            try:
+                raise MyException
+            except (Exception,):
+                print("Got a custom exception")
+            print('Done.')
+         """)
