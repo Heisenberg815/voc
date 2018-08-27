@@ -1,7 +1,6 @@
 import ast
 import copy
 import sys
-import traceback
 
 from ..java import opcodes as JavaOpcodes
 from .modules import Module
@@ -1796,7 +1795,7 @@ class Visitor(ast.NodeVisitor):
                         'Lorg/python/Object;'
                     )
                 )
-                
+
         yield_point = len(self.context.yield_points) + 1
 
         # Save the current stack and yield index
@@ -2542,8 +2541,7 @@ class Visitor(ast.NodeVisitor):
         return node.type is None or (
                 isinstance(node.type, ast.Name) and
                 (node.type.id in builtin_exceptions or
-                node.type.id in self.symbol_namespace
-                )
+                 node.type.id in self.symbol_namespace)
         )
 
     @node_visitor
@@ -2595,7 +2593,6 @@ class Visitor(ast.NodeVisitor):
             self.context.add_opcodes(
                 END_IF(),
             )
-
 
     def _visitCoreException(self, node):
         if isinstance(node.type, ast.Tuple):
