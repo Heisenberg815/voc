@@ -4,17 +4,6 @@ public class Super implements org.python.Object {
     public org.python.types.Type klass;
     public org.python.Object instance;
 
-    /**
-     * A utility method to update the internal value of this object.
-     *
-     * Used by __i*__ operations to do an in-place operation.
-     * On a base object, it will always fail. Subclasses should override
-     * to provide the relevant assignment info.
-     */
-    void setValue(org.python.Object obj) {
-        throw new org.python.exceptions.RuntimeError("super object cannot be updated.");
-    }
-
     public java.lang.Object toJava() {
         return this;
     }
@@ -25,10 +14,6 @@ public class Super implements org.python.Object {
 
     public boolean toBoolean() {
         return true;
-    }
-
-    public org.python.Object byValue() {
-        return this;
     }
 
     public org.python.types.Type type() {
@@ -60,7 +45,7 @@ public class Super implements org.python.Object {
      */
     public boolean equals(java.lang.Object other) {
         if (other instanceof org.python.Object) {
-            org.python.Object result = org.python.types.Object.__cmp_bool__(this, (org.python.Object) other, org.python.types.Object.CMP_OP.EQ);
+            org.python.Object result = org.python.types.Object.__eq__(this, (org.python.Object) other);
             return ((org.python.types.Bool) result).value;
         } else {
             throw new org.python.exceptions.RuntimeError("Can't compare a Python object with non-Python object.");
@@ -164,7 +149,7 @@ public class Super implements org.python.Object {
             args = {"other"}
     )
     public org.python.Object __eq__(org.python.Object other) {
-        return new org.python.types.Bool(System.identityHashCode(this) == System.identityHashCode(other));
+        return org.python.types.Bool.getBool(System.identityHashCode(this) == System.identityHashCode(other));
     }
 
     @org.python.Method(
@@ -178,7 +163,7 @@ public class Super implements org.python.Object {
         if (result instanceof org.python.types.NotImplementedType) {
             return result;
         }
-        return new org.python.types.Bool(!((org.python.types.Bool) result).value);
+        return org.python.types.Bool.getBool(!((org.python.types.Bool) result).value);
     }
 
     @org.python.Method(
@@ -201,7 +186,11 @@ public class Super implements org.python.Object {
             __doc__ = "Return hash(self)."
     )
     public org.python.Object __hash__() {
-        return new org.python.types.Int(this.hashCode());
+        return org.python.types.Int.getInt(this.hashCode());
+    }
+
+    public boolean isHashable() {
+        return true;
     }
 
     @org.python.Method(
@@ -463,14 +452,6 @@ public class Super implements org.python.Object {
         throw new org.python.exceptions.AttributeError(this, "__contains__");
     }
 
-    @org.python.Method(
-            __doc__ = "",
-            args = {"item"}
-    )
-    public org.python.Object __not_contains__(org.python.Object item) {
-        throw new org.python.exceptions.AttributeError(this, "__not_contains__");
-    }
-
     /**
      * Section 3.3.7 - Emulating numeric types
      */
@@ -688,8 +669,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __iadd__(org.python.Object other) {
         try {
-            this.setValue(this.__add__(other));
-            return this;
+            return this.__add__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for +=: 'super()' and '" + other.typeName() + "'");
         }
@@ -713,8 +693,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __imul__(org.python.Object other) {
         try {
-            this.setValue(this.__mul__(other));
-            return this;
+            return this.__mul__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for *=: 'super()' and '" + other.typeName() + "'");
         }
@@ -726,8 +705,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __itruediv__(org.python.Object other) {
         try {
-            this.setValue(this.__truediv__(other));
-            return this;
+            return this.__truediv__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for /=: 'super()' and '" + other.typeName() + "'");
         }
@@ -739,8 +717,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __ifloordiv__(org.python.Object other) {
         try {
-            this.setValue(this.__floordiv__(other));
-            return this;
+            return this.__floordiv__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for //=: 'super()' and '" + other.typeName() + "'");
         }
@@ -752,8 +729,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __imod__(org.python.Object other) {
         try {
-            this.setValue(this.__mod__(other));
-            return this;
+            return this.__mod__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for %=: 'super()' and '" + other.typeName() + "'");
         }
@@ -765,8 +741,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __idivmod__(org.python.Object other) {
         try {
-            this.setValue(this.__pow__(other, null));
-            return this;
+            return this.__divmod__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for //=: '" + this.typeName() + "' and '" + other.typeName() + "'");
         }
@@ -778,8 +753,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __ipow__(org.python.Object other) {
         try {
-            this.setValue(this.__pow__(other, null));
-            return this;
+            return this.__pow__(other, null);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for **=: 'super()' and '" + other.typeName() + "'");
         }
@@ -791,8 +765,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __ilshift__(org.python.Object other) {
         try {
-            this.setValue(this.__lshift__(other));
-            return this;
+            return this.__lshift__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for <<=: 'super()' and '" + other.typeName() + "'");
         }
@@ -804,8 +777,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __irshift__(org.python.Object other) {
         try {
-            this.setValue(this.__rshift__(other));
-            return this;
+            return this.__rshift__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for >>=: 'super()' and '" + other.typeName() + "'");
         }
@@ -829,8 +801,7 @@ public class Super implements org.python.Object {
     )
     public org.python.Object __ixor__(org.python.Object other) {
         try {
-            this.setValue(this.__xor__(other));
-            return this;
+            return this.__xor__(other);
         } catch (org.python.exceptions.TypeError e) {
             throw new org.python.exceptions.TypeError("unsupported operand type(s) for ^=: 'super()' and '" + other.typeName() + "'");
         }
@@ -880,7 +851,7 @@ public class Super implements org.python.Object {
             __doc__ = ""
     )
     public org.python.Object __not__() {
-        return new org.python.types.Bool(!((org.python.types.Bool) this.__bool__()).value);
+        return org.python.types.Bool.getBool(!((org.python.types.Bool) this.__bool__()).value);
     }
 
     @org.python.Method(

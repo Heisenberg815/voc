@@ -13,7 +13,8 @@ from ..java import (
 )
 from .blocks import Block, IgnoreBlock
 from .methods import (
-    InitMethod, ClosureInitMethod, GeneratorMethod, Method, CO_GENERATOR
+    InitMethod, ClosureInitMethod,
+    GeneratorMethod, Method, CO_GENERATOR,
 )
 from .types import java, python
 from .types.primitives import (
@@ -56,6 +57,9 @@ class Class(Block):
 
         self._constructor = None
 
+        # Store the Module object as a local variable
+        self.store_module()
+
     @property
     def descriptor(self):
         return self._parent.build_child_class_descriptor(self.name)
@@ -67,6 +71,20 @@ class Class(Block):
     @property
     def module(self):
         return self._parent.module
+
+    def store_module(self):
+        # Stores the current module as a local variable
+        if ('#module') not in self.local_vars:
+            self.add_opcodes(
+                JavaOpcodes.GETSTATIC('python/sys', 'modules', 'Lorg/python/types/Dict;'),
+
+                python.Str(self.module.full_name),
+
+                python.Object.get_item(),
+                JavaOpcodes.CHECKCAST('org/python/types/Module'),
+
+                ASTORE_name('#module'),
+            )
 
     def build_child_class_descriptor(self, child_name):
         return '$'.join([self.descriptor, child_name])
@@ -197,13 +215,7 @@ class Class(Block):
 
     def load_globals(self):
         self.add_opcodes(
-            JavaOpcodes.GETSTATIC('python/sys', 'modules', 'Lorg/python/types/Dict;'),
-
-            python.Str(self.module.full_name),
-
-            python.Object.get_item(),
-            JavaOpcodes.CHECKCAST('org/python/types/Module'),
-
+            ALOAD_name('#module'),
             JavaOpcodes.GETFIELD('org/python/types/Module', '__dict__', 'Ljava/util/Map;'),
         )
 
@@ -242,7 +254,7 @@ class Class(Block):
                 generator=code.co_name,
                 parameters=parameter_signatures,
                 returns=return_signature,
-                static=True,
+                static=True
             )
 
         else:
@@ -252,7 +264,7 @@ class Class(Block):
                 code=code,
                 parameters=parameter_signatures,
                 returns=return_signature,
-                static=True,
+                static=True
             )
 
         # Add the method to the list that need to be
@@ -357,7 +369,7 @@ class Class(Block):
 class ClosureClass(Class):
     CONSTRUCTOR = ClosureInitMethod
 
-    def __init__(self, parent, name, closure_var_names, verbosity=0):
+    def __init__(self, parent, name, verbosity=0):
         super().__init__(
             parent=parent,
             name=name,
@@ -366,4 +378,3 @@ class ClosureClass(Class):
             verbosity=verbosity,
             include_default_constructor=False,
         )
-        self.closure_var_names = closure_var_names

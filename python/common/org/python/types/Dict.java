@@ -3,16 +3,6 @@ package org.python.types;
 public class Dict extends org.python.types.Object {
     public java.util.Map<org.python.Object, org.python.Object> value;
 
-    /**
-     * A utility method to update the internal value of this object.
-     * <p>
-     * Used by __i*__ operations to do an in-place operation.
-     * obj must be of type org.python.types.Dict
-     */
-    void setValue(org.python.Object obj) {
-        this.value = ((org.python.types.Dict) obj).value;
-    }
-
     public java.lang.Object toJava() {
         return this.value;
     }
@@ -24,6 +14,11 @@ public class Dict extends org.python.types.Object {
     @Override
     public org.python.Object __hash__() {
         throw new org.python.exceptions.AttributeError(this, "__hash__");
+    }
+
+    @Override
+    public boolean isHashable() {
+        return false;
     }
 
     public Dict() {
@@ -70,7 +65,7 @@ public class Dict extends org.python.types.Object {
                             org.python.types.Str str = ((org.python.types.Str) next);
                             data = new java.util.ArrayList<org.python.Object>();
                             for (int i = 0; i < ((org.python.types.Int) str.__len__()).value; i++) {
-                                data.add(str.__getitem__(new org.python.types.Int(i)));
+                                data.add(str.__getitem__(org.python.types.Int.getInt(i)));
                             }
                         } else {
                             throw new org.python.exceptions.TypeError(
@@ -172,7 +167,7 @@ public class Dict extends org.python.types.Object {
             __doc__ = ""
     )
     public org.python.Object __bool__() {
-        return new org.python.types.Bool(!this.value.isEmpty());
+        return org.python.types.Bool.getBool(!this.value.isEmpty());
     }
 
     @org.python.Method(
@@ -198,7 +193,7 @@ public class Dict extends org.python.types.Object {
     public org.python.Object __eq__(org.python.Object other) {
         if (other instanceof org.python.types.Dict) {
             org.python.types.Dict otherDict = (org.python.types.Dict) other;
-            return new org.python.types.Bool(this.value.equals(otherDict.value));
+            return org.python.types.Bool.getBool(this.value.equals(otherDict.value));
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
     }
@@ -252,7 +247,21 @@ public class Dict extends org.python.types.Object {
             __doc__ = "Return len(self)."
     )
     public org.python.types.Int __len__() {
-        return new org.python.types.Int(this.value.size());
+        return org.python.types.Int.getInt(this.value.size());
+    }
+
+    private org.python.Object _getitem(org.python.Object item) {
+        if (item.isHashable()) {
+            org.python.Object value = this.value.get(item);
+
+            if (value == null) {
+                throw new org.python.exceptions.KeyError(item);
+            }
+            return value;
+        } else {
+            throw new org.python.exceptions.TypeError(
+                String.format("unhashable type: '%s'", org.Python.typeName(item.getClass())));
+        }
     }
 
     @org.python.Method(
@@ -261,19 +270,13 @@ public class Dict extends org.python.types.Object {
     )
     public org.python.Object __getitem__(org.python.Object item) {
         try {
-            // While hashcode is not used, it is not a redundant line.
-            // We are determining if the item is hashable by seeing if an
-            // exception is thrown.
-            org.python.Object hashcode = item.__hash__();
-
-            org.python.Object value = this.value.get(item);
-            if (value == null) {
+            return _getitem(item);
+        } catch (org.python.exceptions.KeyError e) {
+            try {
+                return this.__missing__(item);
+            } catch (org.python.exceptions.AttributeError ae) {
                 throw new org.python.exceptions.KeyError(item);
             }
-            return value;
-        } catch (org.python.exceptions.AttributeError ae) {
-            throw new org.python.exceptions.TypeError(
-                    String.format("unhashable type: '%s'", org.Python.typeName(item.getClass())));
         }
     }
 
@@ -282,14 +285,9 @@ public class Dict extends org.python.types.Object {
             args = {"item", "value"}
     )
     public void __setitem__(org.python.Object item, org.python.Object value) {
-        try {
-            // While hashcode is not used, it is not a redundant line.
-            // We are determining if the item is hashable by seeing if an
-            // exception is thrown.
-            org.python.Object hashcode = item.__hash__();
-
+        if (item.isHashable()) {
             this.value.put(item, value);
-        } catch (org.python.exceptions.AttributeError ae) {
+        } else {
             throw new org.python.exceptions.TypeError(
                     String.format("unhashable type: '%s'", org.Python.typeName(item.getClass())));
         }
@@ -321,24 +319,10 @@ public class Dict extends org.python.types.Object {
     public org.python.Object __contains__(org.python.Object item) {
         // allow unhashable type error to be percolated up.
         try {
-            __getitem__(item);
-            return new org.python.types.Bool(true);
+            _getitem(item);
+            return org.python.types.Bool.TRUE;
         } catch (org.python.exceptions.KeyError e) {
-            return new org.python.types.Bool(false);
-        }
-    }
-
-    @org.python.Method(
-            __doc__ = "",
-            args = {"item"}
-    )
-    public org.python.Object __not_contains__(org.python.Object item) {
-        // allow unhashable type error to be percolated up.
-        try {
-            __getitem__(item);
-            return new org.python.types.Bool(false);
-        } catch (org.python.exceptions.KeyError e) {
-            return new org.python.types.Bool(true);
+            return org.python.types.Bool.FALSE;
         }
     }
 
@@ -385,7 +369,7 @@ public class Dict extends org.python.types.Object {
     )
     public org.python.Object get(org.python.Object k, org.python.Object d) {
         try {
-            return this.__getitem__(k);
+            return this._getitem(k);
         } catch (org.python.exceptions.KeyError e) { // allow unhashable type error to be percolated up.
             if (d == null) {
                 return org.python.types.NoneType.NONE;
@@ -398,27 +382,15 @@ public class Dict extends org.python.types.Object {
             __doc__ = "D.items() -> a set-like object providing a view on D's items"
     )
     public org.python.Object items() {
-        // FIXME: This should return a dict_view object, not compose a new list.
-        org.python.types.List result = new org.python.types.List();
-        java.util.List<org.python.Object> item;
-        org.python.types.Tuple tuple;
-
-        for (org.python.Object key : this.value.keySet()) {
-            item = new java.util.ArrayList<org.python.Object>();
-            item.add(key);
-            item.add(this.value.get(key));
-
-            tuple = new org.python.types.Tuple(item);
-            result.append(tuple);
-        }
-        return result;
+        return new org.python.types.DictItems(this);
     }
 
     @org.python.Method(
             __doc__ = "D.keys() -> a set-like object providing a view on D's keys"
     )
     public org.python.Object keys() {
-        throw new org.python.exceptions.NotImplementedError("dict.keys() has not been implemented.");
+        //throw new org.python.exceptions.NotImplementedError("dict.keys() has not been implemented.");
+        return new org.python.types.DictKeys(this);
     }
 
     @org.python.Method(
@@ -461,7 +433,7 @@ public class Dict extends org.python.types.Object {
     )
     public org.python.Object setdefault(org.python.Object k, org.python.Object d) {
         try {
-            return this.__getitem__(k);
+            return this._getitem(k);
         } catch (org.python.exceptions.KeyError e) { // allow unhashable type error to be percolated up.
             if (d == null) {
                 d = org.python.types.NoneType.NONE;
@@ -486,7 +458,7 @@ public class Dict extends org.python.types.Object {
                 while (true) {
                     try {
                         org.python.Object key = iterator.__next__();
-                        org.python.Object value = kwargs.__getitem__(key);
+                        org.python.Object value = kwargs.value.get(key);
                         this.value.put(key, value);
                     } catch (org.python.exceptions.StopIteration si) {
                         break;
@@ -498,7 +470,7 @@ public class Dict extends org.python.types.Object {
             while (true) {
                 try {
                     org.python.Object key = iterator.__next__();
-                    org.python.Object value = iterable.__getitem__(key);
+                    org.python.Object value = ((org.python.types.Dict) iterable)._getitem(key);
                     this.value.put(key, value);
                 } catch (org.python.exceptions.StopIteration si) {
                     break;
@@ -542,6 +514,7 @@ public class Dict extends org.python.types.Object {
             __doc__ = "D.values() -> an object providing a view on D's values"
     )
     public org.python.Object values() {
-        throw new org.python.exceptions.NotImplementedError("dict.values() has not been implemented.");
+        //throw new org.python.exceptions.NotImplementedError("dict.values() has not been implemented.");
+        return new org.python.types.DictValues(this);
     }
 }

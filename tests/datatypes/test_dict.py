@@ -203,30 +203,45 @@ class DictTests(TranspileTestCase):
             print(x.get(1))
             print(x.get(2))
             print(x.get(3,4))
+
+            class MyClass:
+                pass
+
+            obj = MyClass()
+            print(x.get(obj))
             """)
 
         # check for unhashable type errors
         self.assertCodeExecution("""
             x = {1: 2}
-            try:
-                print(x.get([]))
-            except TypeError as err:
-                print(err)
-            try:
-                print(x.get([], 1))
-            except TypeError as err:
-                print(err)
-            """)
 
-        # check for unhashable type errors
-        self.assertCodeExecution("""
-            x = {1: 2}
             try:
                 print(x.get([]))
             except TypeError as err:
                 print(err)
+
             try:
                 print(x.get([], 1))
+            except TypeError as err:
+                print(err)
+
+            try:
+                print(x.get(list([1])))
+            except TypeError as err:
+                print(err)
+
+            try:
+                print(x.get(set([1, 2, 3])))
+            except TypeError as err:
+                print(err)
+
+            try:
+                print(x.get(iter([1, 2, 3])))
+            except TypeError as err:
+                print(err)
+
+            try:
+                print(x.get(slice(3)))
             except TypeError as err:
                 print(err)
             """)
@@ -346,6 +361,124 @@ class DictTests(TranspileTestCase):
                 print(err)
             """)
 
+    def test_values(self):
+        self.assertCodeExecution("""
+            x = {1 : 1,2 : 2,3 : 3}
+            y = x.values()
+            print(type(y))
+            print(len(y))
+            print(3 in y)
+            print(42 not in y)
+            if y:
+                print('Working as expected')
+            s = 0
+            for i in y:
+                s += i
+            print(s)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2}
+                print(x.values() * 'a')
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                print(y[0])
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                print(y['a'])
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                y[0] = 7
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                del y[0]
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                print(+y)
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                print(-y)
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+        self.assertCodeExecution("""
+            try:
+                x = {1 : 1,2 : 2,3 : 3}
+                y = x.values()
+                print(~y)
+                print('A TypeError should have been raised')
+            except TypeError as err:
+                print(err)
+            """)
+
+    def test_items(self):
+        self.assertCodeExecution("""
+            x = {1 : 1,2 : 2,3 : 3}
+            x2 = {1 : 1,2 : 2,3 : 3,4 : 4}
+            y = x.items()
+            y2 = x2.items()
+            print(len(y))
+            print((1,1) in y)
+            print((1,2) not in y)
+            s1 = 0
+            s2 = 0
+            for i,j in y:
+                s1 += i
+                s2 += j
+            print(s1)
+            print(s2)
+            s = {(1,1),(1,2),(2,2),(2,3)}
+            print(len(y & s))
+            print(len(y | s))
+            print(len(y ^ s))
+            print(len(y - s))
+            """)
+
 
 class UnaryDictOperationTests(UnaryOperationTestCase, TranspileTestCase):
     data_type = 'dict'
@@ -360,7 +493,7 @@ class BinaryDictOperationTests(BinaryOperationTestCase, TranspileTestCase):
         'test_subscr_bytearray',
         'test_subscr_class',
         'test_subscr_complex',
-        'test_subscr_slice',
+
     ]
 
 

@@ -238,6 +238,16 @@ class StrTests(TranspileTestCase):
                 print(err)
             """)
 
+    def test_setitem(self):
+        # Strings are immutable and do not allow item assignment
+        self.assertCodeExecution("""
+            x = "BeeWare"
+            try:
+                x[0] = "A"
+            except TypeError as err:
+                print(err)
+        """)
+
     def test_slice(self):
         # Full slice
         self.assertCodeExecution("""
@@ -814,11 +824,10 @@ class StrTests(TranspileTestCase):
         for test in tests:
             print(test.isprintable())
         """)
-    
-    @expectedFailure
+
     def test_isprintable_surrogate_cases(self):
         self.assertCodeExecution(r"""
-        tests = ['\ud800', '\udbff', '\udc00', '\udfff']
+        tests = ['\ud801', '\udbff', '\udc00', '\udfff']
         for test in tests:
             print(test.isprintable())
         """)
@@ -871,13 +880,39 @@ class StrTests(TranspileTestCase):
 
             s = '-.-42'
             print(s.zfill(6))
+
+            s = "42"
+            try:
+                s.zfill()
+            except TypeError as err:
+                print(err)
         """)
 
-    @expectedFailure
-    def test_zfill_arg_handling(self):
+    def test_contains(self):
         self.assertCodeExecution("""
-            s = "42"
-            s.zfill()
+            print('abc' in 'abc')
+            print('a' in 'abc')
+            print('a' in '')
+            print('' in 'a')
+
+            print('abc' not in 'abc')
+            print('a' not in 'abc')
+            print('a' not in '')
+            print('' in 'a')
+        """)
+
+    def test_too_many_arguments(self):
+        self.assertCodeExecution("""
+            try:
+                print(str(1, 2, 3, 4, 5))
+            except TypeError as err:
+                print(err)
+
+            try:
+                print(str("1", "2", "3", "4", "5"))
+            except TypeError as err:
+                print(err)
+
         """)
 
 

@@ -6,22 +6,8 @@ public class Float extends org.python.types.Object {
     private static final long NEGATIVE_ZERO_RAW_BITS = Double.doubleToRawLongBits(-0.0);
     public double value;
 
-    /**
-     * A utility method to update the internal value of this object.
-     *
-     * Used by __i*__ operations to do an in-place operation.
-     * obj must be of type org.python.types.Float
-     */
-    void setValue(org.python.Object obj) {
-        this.value = ((org.python.types.Float) obj).value;
-    }
-
     public java.lang.Object toJava() {
         return this.value;
-    }
-
-    public org.python.Object byValue() {
-        return new org.python.types.Float(this.value);
     }
 
     public int hashCode() {
@@ -43,15 +29,21 @@ public class Float extends org.python.types.Object {
             __doc__ = "float(x) -> floating point number" +
                     "\n" +
                     "Convert a string or number to a floating point number, if possible.\n",
-            args = {"x"}
+            default_args = {"x"}
     )
     public Float(org.python.Object[] args, java.util.Map<java.lang.String, org.python.Object> kwargs) {
-        try {
-            this.value = ((org.python.types.Float) args[0].__float__()).value;
-        } catch (org.python.exceptions.AttributeError ae) {
-            throw new org.python.exceptions.TypeError(
-                    "float() argument must be a string or a number, not '" + args[0].typeName() + "'"
-            );
+        if (args[0] == null) {
+            this.value = 0.0;
+        } else if (args.length == 1) {
+            try {
+                this.value = ((org.python.types.Float) args[0].__float__()).value;
+            } catch (org.python.exceptions.AttributeError ae) {
+                throw new org.python.exceptions.TypeError(
+                      "float() argument must be a string or a number, not '" + args[0].typeName() + "'"
+                );
+          }
+        } else {
+            throw new org.python.exceptions.TypeError("float() takes at most 1 argument (" + args.length + " given)");
         }
     }
 
@@ -137,15 +129,15 @@ public class Float extends org.python.types.Object {
     public org.python.Object __lt__(org.python.Object other) {
         if (other instanceof org.python.types.Int) {
             long other_val = ((org.python.types.Int) other).value;
-            return new org.python.types.Bool(this.value < ((double) other_val));
+            return org.python.types.Bool.getBool(this.value < ((double) other_val));
         } else if (other instanceof org.python.types.Float) {
             double other_val = ((org.python.types.Float) other).value;
-            return new org.python.types.Bool(this.value < other_val);
+            return org.python.types.Bool.getBool(this.value < other_val);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Bool(this.value < 1.0);
+                return org.python.types.Bool.getBool(this.value < 1.0);
             } else {
-                return new org.python.types.Bool(this.value < 0.0);
+                return org.python.types.Bool.getBool(this.value < 0.0);
             }
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
@@ -158,15 +150,15 @@ public class Float extends org.python.types.Object {
     public org.python.Object __le__(org.python.Object other) {
         if (other instanceof org.python.types.Int) {
             long other_val = ((org.python.types.Int) other).value;
-            return new org.python.types.Bool(this.value <= ((double) other_val));
+            return org.python.types.Bool.getBool(this.value <= ((double) other_val));
         } else if (other instanceof org.python.types.Float) {
             double other_val = ((org.python.types.Float) other).value;
-            return new org.python.types.Bool(this.value <= other_val);
+            return org.python.types.Bool.getBool(this.value <= other_val);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Bool(this.value <= 1.0);
+                return org.python.types.Bool.getBool(this.value <= 1.0);
             } else {
-                return new org.python.types.Bool(this.value <= 0.0);
+                return org.python.types.Bool.getBool(this.value <= 0.0);
             }
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
@@ -178,14 +170,14 @@ public class Float extends org.python.types.Object {
     )
     public org.python.Object __eq__(org.python.Object other) {
         if (other instanceof org.python.types.Int) {
-            return new org.python.types.Bool(this.value == ((double) ((org.python.types.Int) other).value));
+            return org.python.types.Bool.getBool(this.value == ((double) ((org.python.types.Int) other).value));
         } else if (other instanceof org.python.types.Float) {
-            return new org.python.types.Bool(this.value == ((org.python.types.Float) other).value);
+            return org.python.types.Bool.getBool(this.value == ((org.python.types.Float) other).value);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Bool(this.value == 1.0);
+                return org.python.types.Bool.getBool(this.value == 1.0);
             } else {
-                return new org.python.types.Bool(this.value == 0.0);
+                return org.python.types.Bool.getBool(this.value == 0.0);
             }
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
@@ -198,15 +190,15 @@ public class Float extends org.python.types.Object {
     public org.python.Object __gt__(org.python.Object other) {
         if (other instanceof org.python.types.Int) {
             long other_val = ((org.python.types.Int) other).value;
-            return new org.python.types.Bool(this.value > ((double) other_val));
+            return org.python.types.Bool.getBool(this.value > ((double) other_val));
         } else if (other instanceof org.python.types.Float) {
             double other_val = ((org.python.types.Float) other).value;
-            return new org.python.types.Bool(this.value > other_val);
+            return org.python.types.Bool.getBool(this.value > other_val);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Bool(this.value > 1.0);
+                return org.python.types.Bool.getBool(this.value > 1.0);
             } else {
-                return new org.python.types.Bool(this.value > 0.0);
+                return org.python.types.Bool.getBool(this.value > 0.0);
             }
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
@@ -219,15 +211,15 @@ public class Float extends org.python.types.Object {
     public org.python.Object __ge__(org.python.Object other) {
         if (other instanceof org.python.types.Int) {
             long other_val = ((org.python.types.Int) other).value;
-            return new org.python.types.Bool(this.value >= ((double) other_val));
+            return org.python.types.Bool.getBool(this.value >= ((double) other_val));
         } else if (other instanceof org.python.types.Float) {
             double other_val = ((org.python.types.Float) other).value;
-            return new org.python.types.Bool(this.value >= other_val);
+            return org.python.types.Bool.getBool(this.value >= other_val);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Bool(this.value >= 1.0);
+                return org.python.types.Bool.getBool(this.value >= 1.0);
             } else {
-                return new org.python.types.Bool(this.value >= 0.0);
+                return org.python.types.Bool.getBool(this.value >= 0.0);
             }
         }
         return org.python.types.NotImplementedType.NOT_IMPLEMENTED;
@@ -237,7 +229,7 @@ public class Float extends org.python.types.Object {
             __doc__ = "self != 0"
     )
     public org.python.types.Bool __bool__() {
-        return new org.python.types.Bool(this.value != 0.0);
+        return org.python.types.Bool.getBool(this.value != 0.0);
     }
 
     public boolean __setattr_null(java.lang.String name, org.python.Object value) {
@@ -264,7 +256,7 @@ public class Float extends org.python.types.Object {
             if (((org.python.types.Bool) other).value) {
                 return new org.python.types.Float(this.value + 1.0);
             }
-            return new org.python.types.Float(this.value);
+            return this;
         } else if (other instanceof org.python.types.Float) {
             double other_val = ((org.python.types.Float) other).value;
             return new org.python.types.Float(this.value + other_val);
@@ -289,7 +281,7 @@ public class Float extends org.python.types.Object {
             if (((org.python.types.Bool) other).value) {
                 return new org.python.types.Float(this.value - 1.0);
             }
-            return new org.python.types.Float(this.value);
+            return this;
         } else if (other instanceof org.python.types.Complex) {
             return new org.python.types.Complex(
                 new org.python.types.Float(this.value - ((org.python.types.Complex) other).real.value),
@@ -363,7 +355,7 @@ public class Float extends org.python.types.Object {
             return new org.python.types.Float(this.value / other_val);
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Float(this.value);
+                return this;
             } else {
                 throw new org.python.exceptions.ZeroDivisionError("float division by zero");
             }
@@ -493,7 +485,7 @@ public class Float extends org.python.types.Object {
             return new org.python.types.Float(java.lang.Math.pow(this.value, other_val));
         } else if (other instanceof org.python.types.Bool) {
             if (((org.python.types.Bool) other).value) {
-                return new org.python.types.Float(this.value);
+                return this;
             } else {
                 return new org.python.types.Float(1);
             }
@@ -596,7 +588,7 @@ public class Float extends org.python.types.Object {
             __doc__ = "+self"
     )
     public org.python.Object __pos__() {
-        return new org.python.types.Float(this.value);
+        return this;
     }
 
     @org.python.Method(
@@ -606,7 +598,7 @@ public class Float extends org.python.types.Object {
         if (this.value < 0.0) {
             return new org.python.types.Float(-this.value);
         } else {
-            return new org.python.types.Float(this.value);
+            return this;
         }
     }
 
@@ -614,14 +606,14 @@ public class Float extends org.python.types.Object {
             __doc__ = "int(self)"
     )
     public org.python.Object __int__() {
-        return new org.python.types.Int((int) this.value);
+        return org.python.types.Int.getInt((int) this.value);
     }
 
     @org.python.Method(
             __doc__ = "float(self)"
     )
     public org.python.Object __float__() {
-        return new org.python.types.Float(this.value);
+        return this;
     }
 
     @org.python.Method(
@@ -645,14 +637,14 @@ public class Float extends org.python.types.Object {
                 sign = -1;
             }
             if (Math.abs(fractionalPart) < 0.5) {
-                return new org.python.types.Int(sign * Math.abs(wholeNumber));
+                return org.python.types.Int.getInt(sign * Math.abs(wholeNumber));
             } else if (Math.abs(fractionalPart) > 0.5) {
-                return new org.python.types.Int(sign * (Math.abs(wholeNumber) + 1));
+                return org.python.types.Int.getInt(sign * (Math.abs(wholeNumber) + 1));
             } else {
                 if (wholeNumber % 2 == 0) {
-                    return new org.python.types.Int(sign * Math.abs(wholeNumber));
+                    return org.python.types.Int.getInt(sign * Math.abs(wholeNumber));
                 } else {
-                    return new org.python.types.Int(sign * (Math.abs(wholeNumber) + 1));
+                    return org.python.types.Int.getInt(sign * (Math.abs(wholeNumber) + 1));
                 }
             }
         } else {
@@ -674,9 +666,9 @@ public class Float extends org.python.types.Object {
     )
     public org.python.Object is_integer() {
         if (this.value == Math.floor(this.value) && !Double.isInfinite(this.value)) {
-            return new org.python.types.Bool(true);
+            return org.python.types.Bool.TRUE;
         }
-        return new org.python.types.Bool(false);
+        return org.python.types.Bool.FALSE;
     }
 
     @org.python.Method(

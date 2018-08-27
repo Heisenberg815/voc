@@ -1,3 +1,5 @@
+from unittest import expectedFailure
+
 from .. utils import TranspileTestCase, UnaryOperationTestCase, BinaryOperationTestCase, InplaceOperationTestCase
 
 
@@ -42,6 +44,15 @@ class TupleTests(TranspileTestCase):
             x = (1, 2.5, "3", True, 5)
             print(x)
             """)
+
+    def test_setitem(self):
+        self.assertCodeExecution("""
+            x = (1, 2, 3, 4, 5)
+            try:
+                x[0] = "a"
+            except TypeError as err:
+                print(err)
+        """)
 
     def test_getitem(self):
         # Simple positive index
@@ -260,6 +271,28 @@ class TupleTests(TranspileTestCase):
             except TypeError as err:
                 print(err)
             """)
+
+    def test_no_arguments(self):
+        self.assertCodeExecution("""
+            x = tuple()
+            print(x)
+        """)
+
+    def test_too_many_arguments(self):
+        self.assertCodeExecution("""
+            try:
+                print(tuple(0, 1))
+            except TypeError as err:
+                print(err)
+        """)
+
+    def test_wrong_argument(self):
+        self.assertCodeExecution("""
+            try:
+                print(tuple(0))
+            except TypeError as err:
+                print(err)
+        """)
 
 
 class UnaryTupleOperationTests(UnaryOperationTestCase, TranspileTestCase):
