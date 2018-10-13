@@ -978,6 +978,8 @@ class TryExceptElseFinallyTests(TranspileTestCase):
             print('Done.')
          """)
 
+    @expectedFailure
+    def test_except_custom_exception_w_tuple_base_exception(self):
         self.assertCodeExecution("""
             class MyException(Exception):
                 pass
