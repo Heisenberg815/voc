@@ -2545,7 +2545,6 @@ class Visitor(ast.NodeVisitor):
         )
 
     @node_visitor
-    # [FIXME] - make it work for Tuples
     def visit_ExceptHandler(self, node):
         # expr? type, identifier? name, stmt* body):
         if self._should_visit_core_exception(node):
