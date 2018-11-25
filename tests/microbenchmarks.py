@@ -1,8 +1,10 @@
 import sys
 from os import path
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from utils import *
+from utils import TranspileTestCase, adjust  # noqa: E402
+
 
 def test_small_integers(test_case):
     print("Running", "test_small_integers")
@@ -13,6 +15,7 @@ def test_small_integers(test_case):
                 for k in range(-5, 257):
                     x = x + 1
         """), timed=True)
+
 
 def test_booleans(test_case):
     print("Running", "test_booleans")
@@ -49,6 +52,7 @@ def test_booleans(test_case):
             y = (False != False) != False
         """), timed=True)
 
+
 def test_global_var_load(test_case):
     print("Running", "test_global_var_load")
     test_case.runAsJava(adjust("""
@@ -67,6 +71,7 @@ def test_global_var_load(test_case):
             print(x)
             print(y)
     """), timed=True)
+
 
 def test_class_var_load(test_case):
     print("Running", "test_class_var_load")
@@ -92,6 +97,7 @@ def test_class_var_load(test_case):
 
     """), timed=True)
 
+
 def test_function_var_load(test_case):
     print("Running", "test_function_var_load")
     test_case.runAsJava(adjust("""
@@ -112,6 +118,7 @@ def test_function_var_load(test_case):
         for i in range(100000):
             foo()
     """), timed=True)
+
 
 def test_code(test_case):
     print("Running", "test_code")
@@ -137,6 +144,7 @@ def test_code(test_case):
         for i in range(100000):
             main(i)
     """), timed=True)
+
 
 def test_cmp(test_case):
     print("Running", "test_cmp")
@@ -169,6 +177,7 @@ def test_cmp(test_case):
                 x = [3.0] > [5.0]
     """), timed=True)
 
+
 def test_loops(test_case):
     print("Running", "test_loops")
     test_case.runAsJava(adjust("""
@@ -178,6 +187,7 @@ def test_loops(test_case):
                     for a in range(100):
                         pass
     """), timed=True)
+
 
 def test_dict_get(test_case):
     print("Running", "test_dictionary_get")
@@ -192,6 +202,7 @@ def test_dict_get(test_case):
             dict.get("a")
     """), timed=True)
 
+
 def test_dict_set(test_case):
     print("Running", "test_dictionary_set")
     test_case.runAsJava(adjust("""
@@ -205,8 +216,49 @@ def test_dict_set(test_case):
             dict["hiss"] = 6
     """), timed=True)
 
+
+def test_class_init(test_case):
+    print("Running", "test_class_init")
+    test_case.runAsJava(adjust("""
+        class A: pass
+        class B: pass
+        class C: pass
+        class D: pass
+        class E: pass
+        class F: pass
+        class G: pass
+        class H: pass
+        class I: pass
+        class J: pass
+        class K: pass
+        class L: pass
+        class M: pass
+        class N: pass
+        class O: pass
+        class P: pass
+        class Q: pass
+        class R: pass
+        class S: pass
+        class T: pass
+        class U: pass
+        class V: pass
+        class W: pass
+        class X: pass
+        class Y: pass
+        class Z: pass
+
+        a = "a"
+        b = 1
+        c = [1]
+        d = {1 : 1}
+        e = list([1])
+        f = True
+        g = 3.0
+    """), timed=True)
+
+
 def test_method(test_case):
-    print("Running, test_method")
+    print("Running", "test_method")
     test_case.runAsJava(adjust("""
         class MyClass:
 
@@ -227,6 +279,7 @@ def test_method(test_case):
             obj.C()
     """), timed=True)
 
+
 def main():
     test_case = TranspileTestCase()
     test_case.setUpClass()
@@ -240,7 +293,9 @@ def main():
     test_cmp(test_case)
     test_dict_get(test_case)
     test_dict_set(test_case)
+    test_class_init(test_case)
     test_method(test_case)
 
-if __name__== "__main__":
-  main()
+
+if __name__ == "__main__":
+    main()
